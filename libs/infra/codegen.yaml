@@ -1,0 +1,48 @@
+overwrite: true
+schema:
+  - './api/appsync.graphql'
+  - './api/schema.graphql'
+generates:
+  './api/graphql-gen.ts':
+    documents: './api/operations/*.graphql'
+    plugins:
+      - 'typescript'
+      - 'typescript-operations'
+      - 'typescript-document-nodes'
+      - add:
+          content: |-
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            import type { DocumentNode } from "graphql/language/ast";
+  '../api/src/graphql.ts':
+    documents: './api/operations/*.graphql'
+    plugins:
+      - 'typescript'
+      - 'typescript-operations'
+      - 'typescript-document-nodes'
+      - 'typescript-graphql-request'
+      - add:
+          content: |-
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            import type { DocumentNode } from "graphql/language/ast";
+
+# hooks:
+#   afterOneFileWrite:
+#     - eslint --fix
+config:
+  scalars:
+    AWSJSON: string
+    AWSDate: string
+    AWSTime: string
+    AWSDateTime: string
+    AWSTimestamp: number
+    AWSEmail: string
+    AWSURL: string
+    AWSPhone: string
+    AWSIPAddress: string
+  skipTypename: true
+  constEnums: true
+  namingConvention:
+    typeNames: change-case-all#pascalCase
+    enumValues: change-case-all#upperCase

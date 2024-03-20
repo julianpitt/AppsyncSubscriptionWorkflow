@@ -1,0 +1,63 @@
+type Item @aws_cognito_user_pools @aws_iam {
+  name: String!
+  price: Float!
+}
+
+type SearchPayload @aws_cognito_user_pools @aws_iam {
+  storeName: String!
+  results: [Item!]!
+  sleepingFor: Int!
+}
+
+type BeingPayload @aws_cognito_user_pools @aws_iam {
+  stores: [String!]!
+}
+
+union ResultPayload = BeingPayload | SearchPayload
+
+type BeginPayload {
+  stores: Int!
+}
+
+input RequestInput {
+  searchTerm: String!
+  requestId: String
+}
+
+type Result @aws_cognito_user_pools @aws_iam {
+  requestId: ID!
+  userId: ID!
+  payload: AWSJSON!
+  stage: Stage!
+}
+
+input ResultInput {
+  requestId: ID!
+  userId: ID!
+  payload: AWSJSON!
+  stage: Stage!
+}
+
+enum Stage {
+  BEGIN
+  MESSAGE
+  END
+}
+
+type Mutation {
+  sendResult(input: ResultInput!): Result @aws_iam
+}
+
+type Query {
+  hello: String
+}
+
+type Subscription {
+  onResult(input: RequestInput!): Result @aws_subscribe(mutations: ["sendResult"])
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}

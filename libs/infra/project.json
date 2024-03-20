@@ -1,0 +1,46 @@
+{
+  "name": "infra",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/infra/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project infra --web",
+  "targets": {
+    "cdk": {
+      "command": "cdk",
+      "options": {
+        "cwd": "libs/infra"
+      }
+    },
+    "codegen": {
+      "command": "graphql-codegen --config codegen.yaml",
+      "options": {
+        "cwd": "libs/infra"
+      }
+    },
+    "deploy:all": {
+      "command": "echo \"Deployed\"",
+      "options": {
+        "cwd": "libs/infra"
+      },
+      "dependsOn": [
+        {
+          "projects": ["frontend"],
+          "target": "build",
+          "params": "ignore"
+        },
+        {
+          "projects": ["infra"],
+          "target": "deploy",
+          "params": "ignore"
+        }
+      ]
+    },
+    "deploy": {
+      "command": "cdk deploy --all --require-approval=never --outputs-file ../../apps/frontend/src/aws-exports.json",
+      "options": {
+        "cwd": "libs/infra"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+mutation SendResult($input: ResultInput!) {
+  sendResult(input: $input) {
+    requestId
+    userId
+    payload
+    stage
+  }
+}
+
+subscription OnResult($input: RequestInput!) {
+  onResult(input: $input) {
+    requestId
+    userId
+    payload
+    stage
+  }
+}

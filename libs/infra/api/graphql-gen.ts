@@ -29,14 +29,6 @@ export type Scalars = {
   Double: { input: any; output: any; }
 };
 
-export type BeginPayload = {
-  stores: Scalars['Int']['output'];
-};
-
-export type BeingPayload = {
-  stores: Array<Scalars['String']['output']>;
-};
-
 export type Item = {
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
@@ -72,14 +64,6 @@ export type ResultInput = {
   requestId: Scalars['ID']['input'];
   stage: Stage;
   userId: Scalars['ID']['input'];
-};
-
-export type ResultPayload = BeingPayload | SearchPayload;
-
-export type SearchPayload = {
-  results: Array<Item>;
-  sleepingFor: Scalars['Int']['output'];
-  storeName: Scalars['String']['output'];
 };
 
 export const enum Stage {

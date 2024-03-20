@@ -1,6 +1,5 @@
 import { Authenticator } from '@aws-amplify/ui-react';
-import { ReactNode, useRef, useState } from 'react';
-import { GraphqlSubscriptionResult } from '@aws-amplify/api-graphql';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { OnResultDocument, OnResultSubscription, OnResultSubscriptionVariables, Result, Stage } from '@appsync-subscription-workflow/api';
 
 import { Amplify, ResourcesConfig } from 'aws-amplify';
@@ -22,7 +21,7 @@ const amplifyConfig: ResourcesConfig = {
     }
   }
 };
-console.log({ amplifyConfig })
+
 Amplify.configure(amplifyConfig);
 
 const client = generateClient();
@@ -55,40 +54,48 @@ const AuthGuardComponent = (props: { children: ReactNode }) => <Authenticator hi
 export function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Result[]>([]);
-  const subscriptionRef = useRef<ReturnType<GraphqlSubscriptionResult<GraphQLSubscription<OnResultSubscription>>['subscribe']> | null>();
+  const subscriptionRef = useRef<ReturnType<ReturnType<typeof client.graphql<GraphQLSubscription<OnResultSubscription>>>['subscribe']> | undefined>();
 
   const beginMessage = results.find(r => r.stage === Stage.BEGIN);
-  const beginMessagePayload: { stores: string[] } | undefined = beginMessage?.payload ? JSON.parse(beginMessage?.payload) : undefined;
+  const beginMessagePayload: { stores: string[] } | undefined = beginMessage?.payload as unknown as { stores: string[] };
   const expectedStoreMessages = beginMessagePayload?.stores.length;
   const storeMessages = results.filter(r => r.stage === Stage.MESSAGE);
 
-  if (expectedStoreMessages !== undefined && expectedStoreMessages === storeMessages.length) {
+  if (loading && expectedStoreMessages !== undefined && expectedStoreMessages === storeMessages.length) {
+    console.log('should close subscription');
     closeSubscription();
   }
 
   function closeSubscription() {
-    subscriptionRef.current?.unsubscribe();
+    if (subscriptionRef.current && !subscriptionRef.current.closed) {
+      console.log('subscription is active, closing');
+      subscriptionRef.current.unsubscribe();
+    }
     setLoading(false);
   }
 
   function startSusbcription() {
-    setLoading(true);
-    const input: OnResultSubscriptionVariables = {
-      input: {
-        searchTerm: ''
+    if (!subscriptionRef.current || subscriptionRef.current.closed) {
+      setResults([]);
+      setLoading(true);
+      console.log('starting');
+      const input: OnResultSubscriptionVariables = {
+        input: {
+          searchTerm: ''
+        }
       }
-    }
 
-    const result = client.graphql<GraphQLSubscription<OnResultSubscription>>({
-      // @ts-expect-error different versions of graphql DocumentNode
-      query: OnResultDocument, variables: input
-    });
-    subscriptionRef.current = result.subscribe((next) => {
-      const result = next.data.onResult
-      if (result !== undefined && result !== null) {
-        setResults(r => [...r, result]);
-      }
-    });
+      const result = client.graphql<GraphQLSubscription<OnResultSubscription>>({
+        // @ts-expect-error different versions of graphql DocumentNode
+        query: OnResultDocument, variables: input
+      });
+      subscriptionRef.current = result.subscribe((next) => {
+        const result = next.data.onResult
+        if (result !== undefined && result !== null) {
+          setResults(r => [...r, { ...result, payload: JSON.parse(result.payload) }]);
+        }
+      });
+    }
   }
 
   return (
@@ -98,8 +105,8 @@ export function App() {
       <p>Subscription {loading ? 'open' : 'closed'}. Recieved {storeMessages.length} of {beginMessagePayload?.stores.length ?? '?'}</p>
       <pre>
         {storeMessages.map((result, idx, arr) => (
-          `Store Message: ${idx}/${beginMessagePayload?.stores.length ?? '?'}\n` +
-          `${JSON.stringify(result, null, 2)}` +
+          `Store Message: ${idx + 1}/${beginMessagePayload?.stores.length ?? '?'}\n` +
+          `${JSON.stringify(result.payload, null, 2)}` +
           `\n`
         ))}
       </pre>

@@ -3,22 +3,6 @@ type Item @aws_cognito_user_pools @aws_iam {
   price: Float!
 }
 
-type SearchPayload @aws_cognito_user_pools @aws_iam {
-  storeName: String!
-  results: [Item!]!
-  sleepingFor: Int!
-}
-
-type BeingPayload @aws_cognito_user_pools @aws_iam {
-  stores: [String!]!
-}
-
-union ResultPayload = BeingPayload | SearchPayload
-
-type BeginPayload {
-  stores: Int!
-}
-
 input RequestInput {
   searchTerm: String!
   requestId: String

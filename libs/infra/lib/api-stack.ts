@@ -73,7 +73,6 @@ export class ApiStack extends Stack {
       queueName: 'send-message-queue.fifo',
       fifo: true,
       encryption: QueueEncryption.UNENCRYPTED,
-      deliveryDelay: Duration.seconds(1),
       visibilityTimeout: Duration.seconds(40),
       retentionPeriod: Duration.minutes(2),
       contentBasedDeduplication: true,
